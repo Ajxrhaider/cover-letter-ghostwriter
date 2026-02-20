@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
+// The fix: Pass as an object { apiKey: string }
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function POST(req: Request) {
+  // ... rest of your logic
   try {
     const { resume, jd } = await req.json();
 
