@@ -12,8 +12,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Initialize the SDK correctly for TypeScript/Turbopack
-    const genAI = new GoogleGenAI({ apiKey });
+    // 1. Initialize the new SDK correctly
+    const ai = new GoogleGenAI({ apiKey });
 
     const { resume, jd } = await req.json();
 
@@ -24,12 +24,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // UPDATE HERE: Change to "gemini-3-flash" if you want to use the v3 model instead
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash", 
-      systemInstruction: "You are an expert career coach and professional ghostwriter for Hizaki Labs. Write a persuasive, concise cover letter mapping the user's resume strictly to the job description without hallucinating skills.",
-    });
-
     const prompt = `
       JOB DESCRIPTION:
       ${jd}
@@ -38,11 +32,22 @@ export async function POST(req: Request) {
       ${resume}
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // 2. NEW SDK SYNTAX: Use ai.models.generateContent directly
+    // You can swap 'gemini-2.5-flash' to 'gemini-3.0-flash' when needed!
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: "You are an expert career coach and professional ghostwriter for Hizaki Labs. Write a persuasive, concise cover letter mapping the user's resume strictly to the job description without hallucinating skills.",
+        temperature: 0.7, // Keeps the AI creative but grounded in the resume
+      }
+    });
 
-    return NextResponse.json({ text });
+    if (!response.text) {
+      throw new Error("No content generated.");
+    }
+
+    return NextResponse.json({ text: response.text });
 
   } catch (error: any) {
     console.error("Gemini API Error:", error);
