@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* 1. Define Hizaki Theme Variables in the new v4 Theme block */
+@theme {
+  --color-primary-hizaki: #6366f1;
+  --color-dark-bg: #0f172a;
+  --color-light-bg: #1e293b;
+  
+  /* Custom Animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  --animate-fade-in-up: fade-in-up 0.8s ease-out forwards;
+}
+
+/* 2. Base Styles using the @layer directive */
+@layer base {
+  body {
+    /* v4 requires these utilities to be available via the import above */
+    @apply antialiased text-slate-900 bg-gray-50;
+  }
+
+  /* Custom selection color from Hizaki source */
+  ::selection {
+    background: #b3d4fc;
+    color: #000;
+  }
+
+  /* Custom Scrollbar Logic */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-dark-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
+/* 3. Custom Utilities */
+@layer utilities {
+  .section-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background-color: var(--color-primary-hizaki);
+    margin: 8px auto 0;
+    border-radius: 2px;
+  }
+}
