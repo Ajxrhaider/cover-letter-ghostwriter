@@ -2,56 +2,43 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
-  // 1. Grab the API Key safely
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: "GEMINI_API_KEY is not defined in environment variables." },
+      { error: "Internal Server Error: API Key missing" },
       { status: 500 }
     );
   }
 
   try {
-    // 2. Initialize the SDK inside the handler or with explicit typing
-    const genAI = new GoogleGenAI(apiKey);
-    
-    // 3. Get the model using the configuration object
-    // We use gemini-1.5-flash as it's the current stable high-speed model
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash" 
-    });
+    // Initialize the SDK correctly for TypeScript/Turbopack
+    const genAI = new GoogleGenAI({ apiKey });
 
     const { resume, jd } = await req.json();
 
     if (!resume || !jd) {
       return NextResponse.json(
-        { error: "Resume and Job Description are required." },
+        { error: "Both resume and job description are required." },
         { status: 400 }
       );
     }
 
-    const systemPrompt = `
-      You are an expert technical recruiter and professional ghostwriter for Hizaki Labs.
-      Your goal is to write a high-conversion cover letter.
-      
-      RULES:
-      - Match skills from the Job Description STRICTLY to the provided Resume.
-      - NEVER invent skills, certifications, or experience.
-      - Maintain a professional, innovative, and confident tone.
-      - Format as a clean business letter.
-    `;
+    // UPDATE HERE: Change to "gemini-3-flash" if you want to use the v3 model instead
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash", 
+      systemInstruction: "You are an expert career coach and professional ghostwriter for Hizaki Labs. Write a persuasive, concise cover letter mapping the user's resume strictly to the job description without hallucinating skills.",
+    });
 
-    const userPrompt = `
+    const prompt = `
       JOB DESCRIPTION:
       ${jd}
 
-      RESUME:
+      USER RESUME:
       ${resume}
     `;
 
-    // 4. Generate content with a combined system + user instruction
-    const result = await model.generateContent([systemPrompt, userPrompt]);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
@@ -60,7 +47,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate cover letter" },
+      { error: "Failed to generate cover letter. Please check your API key permissions and model access." },
       { status: 500 }
     );
   }
